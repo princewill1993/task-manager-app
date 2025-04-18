@@ -27,14 +27,9 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    taskStatus: {
-      type: String,
-      enum: ["ongoing", "completed"],
-      default: "ongoing",
-    },
   },
   { timestamps: true }
 );
 
-const userModel = new mongoose.model("users", userSchema);
+const userModel = mongoose.model("users", userSchema);
 export { userModel };

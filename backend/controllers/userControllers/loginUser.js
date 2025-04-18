@@ -1,5 +1,7 @@
 import { userModel } from "../../models/usersModel/userModel.js";
 import validator from "validator";
+import bcrypt from "bcrypt";
+import { tasksModel } from "../../models/tasksModel/tasksModel.js";
 
 async function loginUser(req, res) {
   const { email, password } = req.body;
@@ -27,18 +29,31 @@ async function loginUser(req, res) {
   }
 
   try {
-    const user = await userModel.findOne({ email: email.toLowercase().trim() });
+    // check for the users login info is in the database
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() });
 
     if (user === null) {
-      res.status(400).json({ message: "Couldn't find user", status: "failed" });
+      return res
+        .status(400)
+        .json({ message: "Couldn't find user", status: "failed" });
     }
-  } catch (error) {
-    res.status(400).json({ data: error, status: "failed" });
-  }
 
-  res
-    .status(201)
-    .json({ message: "success", data: "user logged in successfully" });
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (isPasswordCorrect === false) {
+      return res
+        .status(400)
+        .json({ message: "Email or Password do not match", status: "failed" });
+    }
+    user.password = undefined;
+    res.status(201).json({
+      user,
+      status: "success ",
+      message: "User logged in successfully",
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message, status: "failed" });
+  }
 }
 
 export { loginUser };

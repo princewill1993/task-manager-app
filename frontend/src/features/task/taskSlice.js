@@ -4,7 +4,7 @@ export const taskSlice = createSlice({
   name: "task",
 
   initialState: {
-    userTasks: [],
+    userTasks: JSON.parse(localStorage.getItem("tasks")) || [],
   },
 
   reducers: {
@@ -16,9 +16,13 @@ export const taskSlice = createSlice({
           task_id: Math.floor(Math.random() * 9999),
           task_content: action.payload,
           task_createdAt: date.toDateString(),
+          taskStatus: "ongoing",
         },
         ...state.userTasks,
       ];
+
+      localStorage.setItem("tasks", JSON.stringify(state.userTasks));
+      console.log(state.userTasks);
     },
     /******* ********/
 
@@ -28,6 +32,7 @@ export const taskSlice = createSlice({
         (item) => item.task_id !== action.payload
       );
       state.userTasks = updatedTask;
+      localStorage.setItem("tasks", JSON.stringify(state.userTasks));
     },
     /******* ********/
 
@@ -40,9 +45,21 @@ export const taskSlice = createSlice({
         return item;
       });
       state.userTasks = updatedTask;
+      localStorage.setItem("tasks", JSON.stringify(state.userTasks));
+    },
+
+    //******(********) */
+    // filterTask: (state, action) => {
+    //   const filterdTask = state.userTasks.filter((task) => {});
+    // },
+
+    setUserTasks: (state, action) => {
+      state.userTasks = action.payload;
+      console.log(state.userTasks);
     },
   },
 });
 
-export const { addNewTask, deleteTask, updateTask } = taskSlice.actions;
+export const { addNewTask, deleteTask, updateTask, setUserTasks } =
+  taskSlice.actions;
 export default taskSlice.reducer;

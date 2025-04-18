@@ -1,7 +1,11 @@
 import { Input, Button } from "antd";
+import axios from "axios";
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import validator from "validator";
+import { serverUrl } from "../../utils/helper";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../features/user/userSlice";
 
 const LoginPage = () => {
   const [loginFormData, setLoginFormData] = React.useState({
@@ -9,8 +13,52 @@ const LoginPage = () => {
     password: "",
   });
 
-  function handleUserLogin() {
-    console.log(loginFormData);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  async function handleUserLogin() {
+    if (validator.isEmail(loginFormData.email) === false) {
+      return alert("Pease provide a valid email address");
+    }
+
+    if (
+      validator.isStrongPassword(loginFormData.password, {
+        minLength: 6,
+        minNumbers: 1,
+        minSymbols: 1,
+        minUppercase: 1,
+        minLowercase: 1,
+      }) === false
+    ) {
+      return alert(
+        "Password must be at least 6 characters long and include numbers, symbols, uppercase and lowercase letters"
+      );
+    }
+    setIsLoading(true);
+
+    // lets log user in
+
+    try {
+      const response = await axios.post(
+        `${serverUrl}/auth/login`,
+        loginFormData
+      );
+      // console.log(response);
+      // dispatch user info into the redux store
+      dispatch(setUser(response.data.user));
+
+      // if (response.data.status === "success") {
+      //   dispatch(setUser(response.data.user));
+      // }
+      navigate("/profile");
+    } catch (error) {
+      console.log(error);
+      alert(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -51,8 +99,10 @@ const LoginPage = () => {
           />{" "}
         </div>
 
-        <div onClick={handleUserLogin} className=" grid gap-5">
+        <div className=" grid gap-5">
           <Button
+            onClick={handleUserLogin}
+            loading={isLoading}
             style={{
               width: "4rem",
               padding: "1.5rem",

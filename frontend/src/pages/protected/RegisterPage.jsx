@@ -1,6 +1,6 @@
 import { Input, Button } from "antd";
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import validator from "validator";
 import axios from "axios";
 import { serverUrl } from "../../utils/helper";
@@ -12,15 +12,20 @@ const RegisterPage = () => {
     password: "",
   });
 
-  const [isloading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const navigate = useNavigate();
 
   async function handleRegisterFormData() {
     if (validator.isEmpty(registerFormData.name, { ignore_whitespace: true })) {
       return alert("Please provide your name");
     }
 
+    if (validator.isEmail(registerFormData.email) === false) {
+      return alert("Email must be provided");
+    }
+
     if (
-      validator.isEmail(registerFormData.email, {
+      validator.isStrongPassword(registerFormData.password, {
         minLength: 6,
         minLowercase: 1,
         minNumbers: 1,
@@ -28,10 +33,6 @@ const RegisterPage = () => {
         minUppercase: 1,
       }) === false
     ) {
-      return alert("Email must be provided");
-    }
-
-    if (validator.isStrongPassword(registerFormData.password) === false) {
       return alert(
         "password must contain uppercase, lowercase, number, special character and a digit "
       );
@@ -44,9 +45,11 @@ const RegisterPage = () => {
         `${serverUrl}/auth/signup`,
         registerFormData
       );
-      console.log(response);
+      if (response.data.status === "success") {
+        navigate("/login");
+      }
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +112,7 @@ const RegisterPage = () => {
 
         <div onClick={handleRegisterFormData} className=" grid gap-5">
           <Button
-            loading={isloading}
+            loading={isLoading}
             style={{
               width: "4rem",
               padding: "1.5rem",
